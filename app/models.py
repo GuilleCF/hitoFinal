@@ -1,9 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 # Create your models here.
+
+class Region(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Comuna(models.Model):
+    name = models.CharField(max_length=100)
+    region = models.ForeignKey(Region, related_name="comunas", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 class User(AbstractUser):
 
-    TIPO_USUARIO_CHOICES = [("arrendatario", "Arrendatario"), ("arrendador", "Arrendador")]
+    TIPO_USUARIO_CHOICES = [
+        ("arrendatario", "Arrendatario"),
+        ("arrendador", "Arrendador")
+    ]
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_user_set',  # Change 'custom_user_set' to whatever you prefer
@@ -26,11 +42,16 @@ class User(AbstractUser):
     tipo_usuario = models.CharField(max_length=50, choices=TIPO_USUARIO_CHOICES, null=False, blank=False)
 
     def __str__(self):
-        return self.username
+        return f'{self.name} {self.last_name}'
     
 class Property(models.Model):
 
-    TYPE_CHOICES = [("departamento", "Departamento"), ("casa", "Casa"), ("oficina", "Oficina"), ("local", "Local")]
+    TYPE_CHOICES = [
+        ("departamento", "Departamento"),
+        ("casa", "Casa"),
+        ("oficina", "Oficina"),
+        ("local", "Local")
+    ]
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     m2_build = models.FloatField(null=False, blank=False)
@@ -43,15 +64,25 @@ class Property(models.Model):
     type_property = models.CharField(max_length=50, choices=TYPE_CHOICES, null=False, blank=False)
     price = models.FloatField(null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="properties")
+
+    def __str__(self):
+        return self.name
     
 class Solicitude(models.Model):
 
-    STATUS_CHOICES = [("pendiente", "Pendiente"), ("aceptada", "Aceptada"), ("rechazada", "Rechazada")]
+    STATUS_CHOICES = [
+        ("pendiente", "Pendiente"),
+        ("aceptada", "Aceptada"), 
+        ("rechazada", "Rechazada")
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="solicitudes")
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="solicitudes")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, null=False, blank=False)
     date = models.DateField(auto_now_add=True)
     message = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f'Solicitud de {self.user.name} por {self.user.last_name} para {self.property.name}'
 
 
 
